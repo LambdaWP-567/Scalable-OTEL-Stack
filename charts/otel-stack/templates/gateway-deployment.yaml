@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-stack.fullname" . }}-gateway
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: otel-gateway
+  template:
+    metadata:
+      labels:
+        app: otel-gateway
+    spec:
+      containers:
+        - name: otel-collector
+          image: {{ .Values.gateway.image }}
+          command:
+            - "--config=/etc/otel-collector-config.yaml"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector-config.yaml
+              subPath: relay.yaml
+          ports:
+            - containerPort: 4317
+            - containerPort: 4318
+          resources:
+            {{- toYaml .Values.gateway.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "otel-stack.fullname" . }}-gateway-config
