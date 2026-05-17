@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "otel-stack.fullname" . }}-test-collector-config
+data:
+  config.yaml: |
+    receivers:
+      hostmetrics:
+        collection_interval: 10s
+        scrapers:
+          cpu:
+          memory:
+          load:
+          disk:
+          network:
+    processors:
+      batch:
+      resourcedetection:
+        detectors: [system]
+    exporters:
+      otlp:
+        endpoint: {{ include "otel-stack.fullname" . }}-gateway:4317
+        tls:
+          insecure: true
+    service:
+      pipelines:
+        metrics:
+          receivers: [hostmetrics]
+          processors: [resourcedetection, batch]
+          exporters: [otlp]
