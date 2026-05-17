@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-stack.fullname" . }}-test-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-test-collector
+  template:
+    metadata:
+      labels:
+        app: otel-test-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: {{ .Values.testCollector.image }}
+          command:
+            - "--config=/etc/otel-collector-config.yaml"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector-config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "otel-stack.fullname" . }}-test-collector-config

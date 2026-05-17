@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-stack.fullname" . }}-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: {{ .Values.grafana.image }}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: Admin
+          volumeMounts:
+            - name: provisioning-datasources
+              mountPath: /etc/grafana/provisioning/datasources/datasource.yaml
+              subPath: datasource.yaml
+            - name: provisioning-providers
+              mountPath: /etc/grafana/provisioning/dashboards/provider.yaml
+              subPath: provider.yaml
+            - name: provisioning-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards/dashboard.json
+              subPath: dashboard.json
+      volumes:
+        - name: provisioning-datasources
+          configMap:
+            name: {{ include "otel-stack.fullname" . }}-grafana-provisioning
+            items:
+              - key: datasource.yaml
+                path: datasource.yaml
+        - name: provisioning-providers
+          configMap:
+            name: {{ include "otel-stack.fullname" . }}-grafana-provisioning
+            items:
+              - key: provider.yaml
+                path: provider.yaml
+        - name: provisioning-dashboards
+          configMap:
+            name: {{ include "otel-stack.fullname" . }}-grafana-provisioning
+            items:
+              - key: dashboard.json
+                path: dashboard.json
